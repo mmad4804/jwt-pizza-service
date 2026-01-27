@@ -33,6 +33,15 @@ test("should return 401 if no token is provided", async () => {
   expect(res.status).toBe(401);
 });
 
+afterAll(async () => {
+  const deleteFranchiseRes = await request(app)
+    .delete("/api/franchise/:franchiseId")
+    .set("Authorization", `Bearer ${adminUserAuthToken}`)
+    .send(testFranchise);
+
+  expect(deleteFranchiseRes.status).toBe(200);
+});
+
 function randomName() {
   return Math.random().toString(36).substring(2, 12);
 }
