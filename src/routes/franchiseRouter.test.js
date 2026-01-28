@@ -38,7 +38,6 @@ test("should return 401 if no token is provided", async () => {
 
 test("create store", async () => {
   const storeName = randomName();
-  console.log("franchise id is ", franchiseId);
   const storeRequest = { franchiseId: franchiseId, name: storeName };
   const createStoreRes = await request(app)
     .post(`/api/franchise/${franchiseId}/store`)
@@ -55,14 +54,70 @@ test("get user franchises", async () => {
     .get(`/api/franchise/${adminUser.id}`)
     .set("Authorization", `Bearer ${adminUserAuthToken}`);
 
-  console.log(getUserFranchiseRes.body);
   expect(getUserFranchiseRes.status).toBe(200);
   expect(getUserFranchiseRes.body[0].name).toBe(testFranchise.name);
   expect(getUserFranchiseRes.body[0].id).toBe(franchiseId);
 });
 
+test("add menu item", async () => {
+  const menuItem = {
+    title: "Veggie",
+    description: "Veggie con carne",
+    image: "veggie.jpg",
+    price: 0.05,
+  };
+
+  const addMenuItemRes = await request(app)
+    .put("/api/order/menu")
+    .set("Authorization", `Bearer ${adminUserAuthToken}`)
+    .send(menuItem);
+
+  expect(addMenuItemRes.status).toBe(200);
+  expect(addMenuItemRes.body).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        title: "Veggie",
+        description: "Veggie con carne",
+        image: "veggie.jpg",
+        price: 0.05,
+      }),
+    ]),
+  );
+});
+
+test("create order", async () => {
+  const order = {
+    franchiseId: franchiseId,
+    storeId: storeId,
+    items: [
+      {
+        menuId: 1,
+        description: "Veggie",
+        price: 0.05,
+      },
+    ],
+  };
+
+  const createOrderRes = await request(app)
+    .post("/api/order")
+    .set("Authorization", `Bearer ${adminUserAuthToken}`)
+    .send(order);
+
+  expect(createOrderRes.status).toBe(200);
+  expect(createOrderRes.body.order.franchiseId).toEqual(franchiseId);
+  expect(createOrderRes.body.order.storeId).toEqual(storeId);
+  expect(createOrderRes.body.order.items).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        menuId: 1,
+        description: "Veggie",
+        price: 0.05,
+      }),
+    ]),
+  );
+});
+
 test("delete store", async () => {
-  console.log("franchise id is ", franchiseId);
   const deleteStoreRes = await request(app)
     .delete(`/api/franchise/${franchiseId}/store/${storeId}`)
     .set("Authorization", `Bearer ${adminUserAuthToken}`);
