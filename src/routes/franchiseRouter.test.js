@@ -8,6 +8,8 @@ const testFranchise = {
 };
 let adminUser;
 let adminUserAuthToken;
+let franchiseId;
+let storeId;
 
 beforeAll(async () => {
   adminUser = await createAdminUser();
@@ -26,6 +28,7 @@ test("create franchise", async () => {
 
   expect(createFranchiseRes.status).toBe(200);
   expect(createFranchiseRes.body.name).toBe(testFranchise.name);
+  franchiseId = createFranchiseRes.body.id;
 });
 
 test("should return 401 if no token is provided", async () => {
@@ -33,9 +36,44 @@ test("should return 401 if no token is provided", async () => {
   expect(res.status).toBe(401);
 });
 
+test("create store", async () => {
+  const storeName = randomName();
+  console.log("franchise id is ", franchiseId);
+  const storeRequest = { franchiseId: franchiseId, name: storeName };
+  const createStoreRes = await request(app)
+    .post(`/api/franchise/${franchiseId}/store`)
+    .set("Authorization", `Bearer ${adminUserAuthToken}`)
+    .send(storeRequest);
+
+  expect(createStoreRes.status).toBe(200);
+  expect(createStoreRes.body.name).toBe(storeName);
+  storeId = createStoreRes.body.id;
+});
+
+test("get user franchises", async () => {
+  const getUserFranchiseRes = await request(app)
+    .get(`/api/franchise/${adminUser.id}`)
+    .set("Authorization", `Bearer ${adminUserAuthToken}`);
+
+  console.log(getUserFranchiseRes.body);
+  expect(getUserFranchiseRes.status).toBe(200);
+  expect(getUserFranchiseRes.body[0].name).toBe(testFranchise.name);
+  expect(getUserFranchiseRes.body[0].id).toBe(franchiseId);
+});
+
+test("delete store", async () => {
+  console.log("franchise id is ", franchiseId);
+  const deleteStoreRes = await request(app)
+    .delete(`/api/franchise/${franchiseId}/store/${storeId}`)
+    .set("Authorization", `Bearer ${adminUserAuthToken}`);
+
+  expect(deleteStoreRes.status).toBe(200);
+  expect(deleteStoreRes.body.message).toBe("store deleted");
+});
+
 afterAll(async () => {
   const deleteFranchiseRes = await request(app)
-    .delete("/api/franchise/:franchiseId")
+    .delete(`/api/franchise/${franchiseId}`)
     .set("Authorization", `Bearer ${adminUserAuthToken}`)
     .send(testFranchise);
 
