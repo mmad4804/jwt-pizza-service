@@ -49,6 +49,16 @@ test("create store", async () => {
   storeId = createStoreRes.body.id;
 });
 
+test("get franchises", async () => {
+  const getFranchiseRes = await request(app)
+    .get(`/api/franchise?page=0&limit=10&name=${testFranchise.name}`)
+    .set("Authorization", `Bearer ${adminUserAuthToken}`);
+
+  expect(getFranchiseRes.status).toBe(200);
+  expect(getFranchiseRes.body.franchises[0].name).toBe(testFranchise.name);
+  expect(getFranchiseRes.body.franchises[0].id).toBe(franchiseId);
+});
+
 test("get user franchises", async () => {
   const getUserFranchiseRes = await request(app)
     .get(`/api/franchise/${adminUser.id}`)
