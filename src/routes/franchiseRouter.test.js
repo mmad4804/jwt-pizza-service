@@ -1,6 +1,7 @@
 const request = require("supertest");
 const app = require("../service");
 const { Role, DB } = require("../database/database.js");
+const { StatusCodeError } = require("../endpointHelper.js");
 
 const testFranchise = {
   name: "pizzaPocket",
@@ -17,6 +18,14 @@ beforeAll(async () => {
   expect(loginRes.status).toBe(200);
   adminUserAuthToken = loginRes.body.token;
   testFranchise.admins[0].email = adminUser.email;
+});
+
+test("StatusCodeError should store message and status", () => {
+  const error = new StatusCodeError("Unauthorized access", 401);
+
+  expect(error.message).toBe("Unauthorized access");
+  expect(error.status).toBe(401);
+  expect(error instanceof Error).toBe(true);
 });
 
 test("create franchise", async () => {
