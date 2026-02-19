@@ -76,6 +76,34 @@ test("list users as admin", async () => {
   expect(listUsersRes.status).toBe(200);
 });
 
+test("delete user authorized", async () => {
+  const adminUser = await DB.addUser({
+    name: randomName(),
+    email: randomName() + "@admin.com",
+    password: "admin",
+    roles: [{ role: "admin" }],
+  });
+  const loginRes = await request(app).put("/api/auth").send({
+    email: adminUser.email,
+    password: "admin",
+  });
+  const userAuthToken = loginRes.body.token;
+
+  // Create a user to delete
+  const userToDelete = await DB.addUser({
+    name: randomName(),
+    email: randomName() + "@test.com",
+    password: "test",
+    roles: [{ role: "diner" }],
+  });
+
+  const deleteUserRes = await request(app)
+    .delete(`/api/user/${userToDelete.id}`)
+    .set("Authorization", `Bearer ${userAuthToken}`);
+  expect(deleteUserRes.status).toBe(200);
+  expect(deleteUserRes.body.message).toBe("user deleted");
+});
+
 function expectValidJwt(potentialJwt) {
   expect(potentialJwt).toMatch(
     /^[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*\.[a-zA-Z0-9\-_]*$/,
