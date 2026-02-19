@@ -72,12 +72,12 @@ userRouter.get(
     if (!user.isRole(Role.Admin)) {
       return res.status(403).json({ message: "unauthorized" });
     }
-    const [users, moreUsers] = await DB.getUsers(
-      req.query.page,
-      req.query.limit,
-      req.query.name,
-    );
-    res.json({ users, more: moreUsers });
+    const page = parseInt(req.query.page) || 0;
+    const limit = parseInt(req.query.limit) || 10;
+    const filter = req.query.filter || req.query.name || "*";
+
+    const [users, moreUsers] = await DB.getUsers(page, limit, filter);
+    res.json({ users: users, more: moreUsers });
   }),
 );
 
