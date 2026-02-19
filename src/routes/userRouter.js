@@ -68,7 +68,16 @@ userRouter.get(
   "/",
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
-    res.json({});
+    const user = req.user;
+    if (!user.isRole(Role.Admin)) {
+      return res.status(403).json({ message: "unauthorized" });
+    }
+    const [users, moreUsers] = await DB.getUsers(
+      req.query.page,
+      req.query.limit,
+      req.query.name,
+    );
+    res.json({ users, more: moreUsers });
   }),
 );
 
@@ -96,15 +105,6 @@ userRouter.delete(
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
     res.json({ message: "not implemented" });
-  }),
-);
-
-// listUsers
-userRouter.get(
-  "/",
-  authRouter.authenticateToken,
-  asyncHandler(async (req, res) => {
-    res.json({ message: "not implemented", users: [], more: false });
   }),
 );
 
