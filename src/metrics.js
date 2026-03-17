@@ -1,4 +1,18 @@
 const config = require("./config");
+const os = require("os");
+
+function getCpuUsagePercentage() {
+  const cpuUsage = os.loadavg()[0] / os.cpus().length;
+  return cpuUsage.toFixed(2) * 100;
+}
+
+function getMemoryUsagePercentage() {
+  const totalMemory = os.totalmem();
+  const freeMemory = os.freemem();
+  const usedMemory = totalMemory - freeMemory;
+  const memoryUsage = (usedMemory / totalMemory) * 100;
+  return memoryUsage.toFixed(2);
+}
 
 const requests = {};
 
@@ -6,31 +20,28 @@ const requests = {};
 setInterval(() => {
   const metrics = [];
 
-  for (const [endpoint, count] of Object.entries(requests)) {
+  for (const [key, count] of Object.entries(requests)) {
+    const isMethod = key.startsWith("method_");
+    const label = isMethod ? key.replace("method_", "") : key;
+    const attributeKey = isMethod ? "method" : "endpoint";
+
     metrics.push(
-      createMetric(
-        "http_requests_total", // Metric name
-        count, // The current count
-        "1", // Unit
-        "sum", // Metric type
-        "asInt", // Value type
-        { endpoint: endpoint }, // Attribute to filter by in Grafana
-      ),
+      createMetric("http_requests_total", count, "1", "sum", "asInt", {
+        [attributeKey]: label,
+      }),
     );
   }
-
-  if (metrics.length > 0) {
-    console.log(`Attempting to push ${metrics.length} metrics to Grafana...`);
-    sendMetricToGrafana(metrics);
-  } else {
-    console.log("No new requests tracked in the last 5s.");
-  }
+  if (metrics.length > 0) sendMetricToGrafana(metrics);
 }, 5000); // Send every 5 seconds (adjust as needed)
 
 // Middleware to track requests
 function requestTracker(req, res, next) {
   const endpoint = `[${req.method}] ${req.path}`;
   requests[endpoint] = (requests[endpoint] || 0) + 1;
+
+  const methodKey = `method_${req.method}`;
+  requests[methodKey] = (requests[methodKey] || 0) + 1;
+
   next();
 }
 
