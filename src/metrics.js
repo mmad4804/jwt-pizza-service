@@ -24,11 +24,11 @@ setInterval(() => {
   const fifteenMinutesInMs = 15 * 60 * 1000;
 
   let activeCount = 0;
-  for (const [userid, lastSeen] of Object.entries(activeUsers)) {
+  for (const [userId, lastSeen] of Object.entries(activeUsers)) {
     if (now - lastSeen < fifteenMinutesInMs) {
       activeCount++;
     } else {
-      delete activeusers[userId];
+      delete activeUsers[userId];
     }
   }
 
@@ -60,7 +60,7 @@ function requestTracker(req, res, next) {
 
 function activeUserTracker(req, res, next) {
   if (req.user && req.user.id) {
-    activeUsers[req.user.id] = DataTransfer.now();
+    activeUsers[req.user.id] = Date.now();
   }
   next();
 }
