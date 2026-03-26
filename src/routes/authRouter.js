@@ -1,12 +1,10 @@
 const express = require("express");
-const { requestTracker } = require("../metrics");
 const jwt = require("jsonwebtoken");
 const config = require("../config.js");
 const { asyncHandler } = require("../endpointHelper.js");
 const { DB, Role } = require("../database/database.js");
 
 const authRouter = express.Router();
-authRouter.use(requestTracker);
 
 authRouter.docs = [
   {

@@ -1,11 +1,9 @@
 const express = require("express");
-const { requestTracker } = require("../metrics");
 const { DB, Role } = require("../database/database.js");
 const { authRouter } = require("./authRouter.js");
 const { StatusCodeError, asyncHandler } = require("../endpointHelper.js");
 
 const franchiseRouter = express.Router();
-franchiseRouter.use(requestTracker);
 
 franchiseRouter.docs = [
   {

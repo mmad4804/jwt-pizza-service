@@ -15,10 +15,26 @@ function getMemoryUsagePercentage() {
 }
 
 const requests = {};
+const activeUsers = {};
 
 // Periodically send the collected data to Grafana
 setInterval(() => {
   const metrics = [];
+  const now = Date.now();
+  const fifteenMinutesInMs = 15 * 60 * 1000;
+
+  let activeCount = 0;
+  for (const [userid, lastSeen] of Object.entries(activeUsers)) {
+    if (now - lastSeen < fifteenMinutesInMs) {
+      activeCount++;
+    } else {
+      delete activeusers[userId];
+    }
+  }
+
+  metrics.push(
+    createMetric("active_users", activeCount, "1", "gauge", "asInt", {}),
+  );
 
   for (const [key, count] of Object.entries(requests)) {
     const isMethod = key.startsWith("method_");
@@ -39,6 +55,13 @@ function requestTracker(req, res, next) {
   const method = req.method; // "GET", "POST", etc.
   requests[method] = (requests[method] || 0) + 1;
 
+  next();
+}
+
+function activeUserTracker(req, res, next) {
+  if (req.user && req.user.id) {
+    activeUsers[req.user.id] = DataTransfer.now();
+  }
   next();
 }
 
@@ -122,6 +145,7 @@ function sendMetricToGrafana(metrics) {
 
 module.exports = {
   requestTracker,
+  activeUserTracker,
   createMetric,
   sendMetricToGrafana,
 };
