@@ -3,7 +3,7 @@ const os = require("os");
 
 function getCpuUsagePercentage() {
   const cpuUsage = os.loadavg()[0] / os.cpus().length;
-  return cpuUsage.toFixed(2) * 100;
+  return Number((cpuUsage * 100).toFixed(2));
 }
 
 function getMemoryUsagePercentage() {
@@ -11,7 +11,7 @@ function getMemoryUsagePercentage() {
   const freeMemory = os.freemem();
   const usedMemory = totalMemory - freeMemory;
   const memoryUsage = (usedMemory / totalMemory) * 100;
-  return memoryUsage.toFixed(2);
+  return Number(memoryUsage.toFixed(2));
 }
 
 const requests = {};
@@ -53,6 +53,17 @@ setInterval(() => {
       createMetric(metricName, count, "1", "sum", "asInt", attributes),
     );
   }
+
+  const cpuRes = getCpuUsagePercentage();
+  const memRes = getMemoryUsagePercentage();
+
+  metrics.push(
+    createMetric("cpu_usage_percent", cpuRes, "%", "gauge", "asDouble", {}),
+  );
+  metrics.push(
+    createMetric("memory_usage_percent", memRes, "%", "gauge", "asDouble", {}),
+  );
+
   if (metrics.length > 0) sendMetricToGrafana(metrics);
 }, 5000); // Send every 5 seconds (adjust as needed)
 
