@@ -1,9 +1,33 @@
 const config = require("./config");
 const os = require("os");
+let lastCpuUsage = os.cpus();
+let lastTimestamp = Date.now();
 
 function getCpuUsagePercentage() {
-  const cpuUsage = os.loadavg()[0] / os.cpus().length;
-  return Number((cpuUsage * 100).toFixed(2));
+  const currentCpuUsage = os.cpus();
+  const currentTimestamp = Date.now();
+
+  let totalIdle = 0;
+  let totalTick = 0;
+
+  for (let i = 0; i < currentCpuUsage.length; i++) {
+    const start = lastCpuUsage[i].times;
+    const end = currentCpuUsage[i].times;
+
+    for (const type in end) {
+      totalTick += end[type] - start[type];
+    }
+    totalIdle += end.idle - start.idle;
+  }
+
+  const idleDiff = totalIdle;
+  const totalDiff = totalTick;
+  const usage = 1 - idleDiff / totalDiff;
+
+  lastCpuUsage = currentCpuUsage;
+  lastTimestamp = currentTimestamp;
+
+  return Number((usage * 100).toFixed(2));
 }
 
 function getMemoryUsagePercentage() {
