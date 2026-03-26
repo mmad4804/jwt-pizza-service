@@ -37,14 +37,20 @@ setInterval(() => {
   );
 
   for (const [key, count] of Object.entries(requests)) {
-    const isMethod = key.startsWith("method_");
-    const label = isMethod ? key.replace("method_", "") : key;
-    const attributeKey = isMethod ? "method" : "endpoint";
+    let metricName = "http_requests_total";
+    let attributes = {};
+
+    if (key.startsWith("auth_")) {
+      metricName = "auth_attempts_total";
+      attributes = { outcome: key.replace("auth_", "") };
+    } else {
+      const isMethod = key.startsWith("method_");
+      const label = isMethod ? key.replace("method_", "") : key;
+      attributes = { [isMethod ? "method" : "endpoint"]: label };
+    }
 
     metrics.push(
-      createMetric("http_requests_total", count, "1", "sum", "asInt", {
-        [attributeKey]: label,
-      }),
+      createMetric(metricName, count, "1", "sum", "asInt", attributes),
     );
   }
   if (metrics.length > 0) sendMetricToGrafana(metrics);
@@ -63,6 +69,11 @@ function activeUserTracker(req, res, next) {
     activeUsers[req.user.id] = Date.now();
   }
   next();
+}
+
+function incrementAuthAttempt(outcome) {
+  const key = `auth_${outcome}`;
+  requests[key] = (requests[key] || 0) + 1;
 }
 
 function createMetric(
@@ -148,6 +159,7 @@ module.exports = {
   activeUserTracker,
   createMetric,
   sendMetricToGrafana,
+  incrementAuthAttempt,
 };
 
 // let requests = 0;
