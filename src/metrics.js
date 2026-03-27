@@ -1,11 +1,9 @@
 const config = require("./config");
 const os = require("os");
 let lastCpuUsage = os.cpus();
-let lastTimestamp = Date.now();
 
 function getCpuUsagePercentage() {
   const currentCpuUsage = os.cpus();
-  const currentTimestamp = Date.now();
 
   let totalIdle = 0;
   let totalTick = 0;
@@ -25,7 +23,6 @@ function getCpuUsagePercentage() {
   const usage = 1 - idleDiff / totalDiff;
 
   lastCpuUsage = currentCpuUsage;
-  lastTimestamp = currentTimestamp;
 
   return Number((usage * 100).toFixed(2));
 }
