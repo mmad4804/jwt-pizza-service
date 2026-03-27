@@ -123,6 +123,8 @@ orderRouter.post(
     );
 
     const order = await DB.addDinerOrder(req.user, orderReq);
+    const startTime = Date.now();
+
     const r = await fetch(`${config.factory.url}/api/order`, {
       method: "POST",
       headers: {
@@ -134,6 +136,9 @@ orderRouter.post(
         order,
       }),
     });
+
+    const latency = Date.now() - startTime;
+    metrics.recordLatency("pizza_creation", latency);
 
     const j = await r.json();
     if (r.ok) {

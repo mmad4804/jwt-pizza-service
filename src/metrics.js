@@ -40,6 +40,11 @@ function getMemoryUsagePercentage() {
 
 const requests = {};
 const activeUsers = {};
+const latencies = {};
+
+function recordLatency(type, ms) {
+  latencies[type] = ms;
+}
 
 // Periodically send the collected data to Grafana
 setInterval(() => {
@@ -105,6 +110,12 @@ setInterval(() => {
     createMetric("revenue_total", totalRevenue, "USD", "sum", "asDouble", {}),
   );
 
+  for (const [type, ms] of Object.entries(latencies)) {
+    metrics.push(
+      createMetric(`${type}_latency_ms`, ms, "ms", "gauge", "asDouble", {}),
+    );
+  }
+
   if (metrics.length > 0) sendMetricToGrafana(metrics);
 }, 5000); // Send every 5 seconds (adjust as needed)
 
@@ -112,6 +123,13 @@ setInterval(() => {
 function requestTracker(req, res, next) {
   const method = req.method; // "GET", "POST", etc.
   requests[method] = (requests[method] || 0) + 1;
+
+  const start = Date.now();
+
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    recordLatency("service", duration);
+  });
 
   next();
 }
@@ -226,4 +244,5 @@ module.exports = {
   sendMetricToGrafana,
   incrementAuthAttempt,
   incrementPizzaMetrics,
+  recordLatency,
 };
