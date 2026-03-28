@@ -39,6 +39,7 @@ jobs:
 
       - name: Write config file
         run: |
+          echo "Writing config.js..."
           echo "module.exports = {
             jwtSecret: '${{ secrets.JWT_SECRET }}',
             db: {
@@ -62,6 +63,8 @@ jobs:
               accountId: '${{ secrets.METRICS_ACCOUNT_ID_KEY }}',
             },  
           };" > src/config.js
+          echo "Verifying endpointUrl length..."
+          grep "endpointUrl" src/config.js | awk '{print length($0)}'
 
       - name: Tests
         run: npm test
