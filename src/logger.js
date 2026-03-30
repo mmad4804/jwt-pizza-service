@@ -1,23 +1,18 @@
 const config = require("./config");
+const { JwtPizzaLogger } = require("jwt-pizza-logger");
 
 class Logger {
+  constructor() {
+    this.factory = new JwtPizzaLogger(
+      config.logging.endpointUrl,
+      config.logging.accountId,
+      config.logging.apiKey,
+      config.logging.source,
+    );
+  }
+
   httpLogger = (req, res, next) => {
-    let send = res.send;
-    res.send = (resBody) => {
-      const logData = {
-        authorized: !!req.headers.authorization,
-        path: req.originalUrl,
-        method: req.method,
-        statusCode: res.statusCode,
-        reqBody: JSON.stringify(req.body),
-        resBody: JSON.stringify(resBody),
-      };
-      const level = this.statusToLogLevel(res.statusCode);
-      this.log(level, "http", logData);
-      res.send = send;
-      return res.send(resBody);
-    };
-    next();
+    this.factory.httpLogger(req, res, next);
   };
 
   log(level, type, logData) {
@@ -26,10 +21,8 @@ class Logger {
       level: level,
       type: type,
     };
-    const values = [this.nowString(), this.sanitize(logData)];
-    const logEvent = { streams: [{ stream: labels, values: [values] }] };
 
-    this.sendLogToGrafana(logEvent);
+    this.factory.log(labels, this.sanitize(logData));
   }
 
   statusToLogLevel(statusCode) {
@@ -43,11 +36,13 @@ class Logger {
   }
 
   sanitize(logData) {
-    logData = JSON.stringify(logData);
-    return logData.replace(
-      /\\"password\\":\s*\\"[^"]*\\"/g,
-      '\\"password\\": \\"*****\\"',
-    );
+    let logString = JSON.stringify(logData);
+    // Sanitize passwords, tokens, and credit cards
+    return logString
+      .replace(/\\"password\\":\s*\\"[^"]*\\"/g, '\\"password\\":\\"*****\\"')
+      .replace(/\\"token\\":\s*\\"[^"]*\\"/g, '\\"token\\":\\"*****\\"')
+      .replace(/\\"email\\":\s*\\"[^"]*\\"/g, '\\"email\\":\\"*****\\"')
+      .replace(/\\"jwt\\":\s*\\"[^"]*\\"/g, '\\"jwt\\":\\"*****\\"');
   }
 
   sendLogToGrafana(event) {
