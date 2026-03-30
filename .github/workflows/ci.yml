@@ -85,33 +85,34 @@ jobs:
       - name: Create dist
         run: |
           mkdir dist
-          cp Dockerfile dist
-          cp -r src/* dist
-          cp *.json dist
+          # Install only production dependencies natively on the runner
+          npm ci --omit=dev 
+          cp -r node_modules dist/
+          cp Dockerfile dist/
+          cp -r src/* dist/
+          cp *.json dist/
           sed -i "s/root/${{ secrets.DB_USERNAME }}/g" dist/config.js
           sed -i "s/tempdbpassword/${{ secrets.DB_PASSWORD }}/g" dist/config.js
           sed -i "s/127.0.0.1/${{ secrets.DB_HOSTNAME }}/g" dist/config.js
-          echo "--- VERIFYING DIST CONFIG ---"
-          cat dist/config.js
-          
+
       - name: Update distribution artifact
         uses: actions/upload-artifact@v4
         with:
           name: package
           path: dist/
-          
+
   deploy:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
     needs: build
     env:
-      version: ${{needs.build.outputs.version}}     
+      version: ${{needs.build.outputs.version}}
     steps:
       - name: Download distribution artifact
         uses: actions/download-artifact@v4
         with:
-          name: package 
+          name: package
           path: .
 
       - name: Create OIDC token to AWS
@@ -127,7 +128,7 @@ jobs:
 
       - name: Set up machine emulation
         uses: docker/setup-qemu-action@v3
-      
+
       - name: Set up Docker build
         uses: docker/setup-buildx-action@v3
 
@@ -141,9 +142,7 @@ jobs:
           tags: |
             ${{ steps.login-ecr.outputs.registry }}/jwt-pizza-service:latest
             ${{ steps.login-ecr.outputs.registry }}/jwt-pizza-service:${{ env.version }}
-            
+
       - name: Deploy new container
         run: |
           aws ecs update-service --cluster jwt-pizza-service --service jwt-pizza-service --force-new-deployment
-            
-                      
