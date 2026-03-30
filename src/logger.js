@@ -1,19 +1,26 @@
 const config = require("./config");
-const { JwtPizzaLogger } = require("jwt-pizza-logger");
+const JwtPizzaLogger = require("jwt-pizza-logger");
 
 class Logger {
   constructor() {
-    this.factory = new JwtPizzaLogger(
-      config.logging.endpointUrl,
-      config.logging.accountId,
-      config.logging.apiKey,
-      config.logging.source,
-    );
+    this.factory = new JwtPizzaLogger(config);
   }
 
   httpLogger = (req, res, next) => {
     this.factory.httpLogger(req, res, next);
   };
+
+  dbLogger(query) {
+    this.factory.dbLogger(query);
+  }
+
+  factoryLogger(orderInfo) {
+    this.factory.factoryLogger(orderInfo);
+  }
+
+  unhandledErrorLogger(err) {
+    this.factory.unhandledErrorLogger(err);
+  }
 
   log(level, type, logData) {
     const labels = {
