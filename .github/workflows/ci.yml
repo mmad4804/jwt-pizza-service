@@ -112,6 +112,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: package 
+          path: .
+
+      - name: Verify files before Docker build
+        run: |
+          ls -R
+          echo "--- Content of config.js ---"
+          cat config.js | grep -A 5 "metrics"
 
       - name: Create OIDC token to AWS
         uses: aws-actions/configure-aws-credentials@v4
@@ -137,8 +144,10 @@ jobs:
           context: .
           platforms: linux/arm64
           push: true
-          tags: ${{ steps.login-ecr.outputs.registry }}/jwt-pizza-service:latest,${{ steps.login-ecr.outputs.registry }}/jwt-pizza-service:${{ env.version }}
-
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/jwt-pizza-service:latest
+            ${{ steps.login-ecr.outputs.registry }}/jwt-pizza-service:${{ env.version }}
+            
       - name: Deploy new container
         run: |
           aws ecs update-service --cluster jwt-pizza-service --service jwt-pizza-service --force-new-deployment
