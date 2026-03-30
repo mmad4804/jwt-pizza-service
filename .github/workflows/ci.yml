@@ -85,9 +85,6 @@ jobs:
       - name: Create dist
         run: |
           mkdir dist
-          # Install only production dependencies natively on the runner
-          npm ci --omit=dev 
-          cp -r node_modules dist/
           cp Dockerfile dist/
           cp -r src/* dist/
           cp *.json dist/

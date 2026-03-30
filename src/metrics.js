@@ -221,7 +221,6 @@ function sendMetricToGrafana(metrics) {
     ],
   };
 
-  console.log("Pushing to:", endpoint);
   fetch(`${endpoint}`, {
     method: "POST",
     body: JSON.stringify(body),
