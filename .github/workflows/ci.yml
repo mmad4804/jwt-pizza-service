@@ -114,12 +114,6 @@ jobs:
           name: package 
           path: .
 
-      - name: Verify files before Docker build
-        run: |
-          ls -R
-          echo "--- Content of config.js ---"
-          cat config.js | grep -A 5 "metrics"
-
       - name: Create OIDC token to AWS
         uses: aws-actions/configure-aws-credentials@v4
         with:
