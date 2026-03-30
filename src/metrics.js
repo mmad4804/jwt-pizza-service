@@ -164,7 +164,7 @@ function createMetric(
   valueType,
   attributes,
 ) {
-  attributes = { ...attributes, source: config.source };
+  attributes = { ...attributes, source: config.metrics.source };
 
   const metric = {
     name: metricName,
@@ -197,6 +197,18 @@ function createMetric(
 }
 
 function sendMetricToGrafana(metrics) {
+  const endpoint = config.metrics.endpointUrl;
+  const accountId = config.metrics.accountId;
+  const apiKey = config.metrics.apiKey;
+
+  if (!endpoint || endpoint === "undefined") {
+    console.error(
+      "Endpoint is undefined. Full config:",
+      JSON.stringify(config),
+    );
+    return;
+  }
+
   const body = {
     resourceMetrics: [
       {
@@ -209,12 +221,12 @@ function sendMetricToGrafana(metrics) {
     ],
   };
 
-  console.log("Pushing to:", config.endpointUrl);
-  fetch(`${config.endpointUrl}`, {
+  console.log("Pushing to:", endpoint);
+  fetch(`${endpoint}`, {
     method: "POST",
     body: JSON.stringify(body),
     headers: {
-      Authorization: `Bearer ${config.accountId}:${config.apiKey}`,
+      Authorization: `Bearer ${accountId}:${apiKey}`,
       "Content-Type": "application/json",
     },
   })
