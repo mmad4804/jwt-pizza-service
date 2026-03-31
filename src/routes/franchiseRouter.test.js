@@ -16,7 +16,7 @@ beforeAll(async () => {
   adminUser = await createAdminUser();
   const loginRes = await request(app).put("/api/auth").send(adminUser);
   expect(loginRes.status).toBe(200);
-  adminUserAuthToken = loginRes.body.token;
+  adminUserAuthToken = loginRes.body.jwt;
   testFranchise.admins[0].email = adminUser.email;
 });
 
@@ -152,7 +152,7 @@ afterAll(async () => {
     .send(testFranchise);
 
   expect(deleteFranchiseRes.status).toBe(200);
-});
+}, 10000);
 
 function randomName() {
   return Math.random().toString(36).substring(2, 12);

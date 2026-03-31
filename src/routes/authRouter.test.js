@@ -9,7 +9,7 @@ let userId;
 beforeAll(async () => {
   testUser.email = Math.random().toString(36).substring(2, 12) + "@test.com";
   const registerRes = await request(app).post("/api/auth").send(testUser);
-  testUserAuthToken = registerRes.body.token;
+  testUserAuthToken = registerRes.body.jwt;
   expectValidJwt(testUserAuthToken);
   userId = registerRes.body.user.id;
 });
@@ -17,7 +17,7 @@ beforeAll(async () => {
 test("login", async () => {
   const loginRes = await request(app).put("/api/auth").send(testUser);
   expect(loginRes.status).toBe(200);
-  expectValidJwt(loginRes.body.token);
+  expectValidJwt(loginRes.body.jwt);
 
   const expectedUser = { ...testUser, roles: [{ role: "diner" }] };
   delete expectedUser.password;
@@ -36,7 +36,7 @@ test("update user", async () => {
     .send(userUpdate);
 
   expect(updateUserRes.status).toBe(200);
-  expectValidJwt(updateUserRes.body.token);
+  expectValidJwt(updateUserRes.body.jwt);
   expect(updateUserRes.body.user.name).toBe(userUpdate.name);
   expect(updateUserRes.body.user.email).toBe(userUpdate.email);
   expect(updateUserRes.body.user.id).toBe(userId);
@@ -58,7 +58,7 @@ test("list users as admin", async () => {
     email: adminUser.email,
     password: "admin",
   });
-  const userAuthToken = loginRes.body.token;
+  const userAuthToken = loginRes.body.jwt;
 
   await request(app)
     .put("/api/user/" + adminUser.id)
@@ -87,7 +87,7 @@ test("delete user authorized", async () => {
     email: adminUser.email,
     password: "admin",
   });
-  const userAuthToken = loginRes.body.token;
+  const userAuthToken = loginRes.body.jwt;
 
   // Create a user to delete
   const userToDelete = await DB.addUser({
