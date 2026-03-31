@@ -1,7 +1,7 @@
 const app = require("./service.js");
 const logger = require("./logger.js");
 
-process.on("unhandledRejection", (reason, promise) => {
+process.on("unhandledRejection", (reason) => {
   logger.log("error", "unhandledRejection", {
     reason: reason.message || reason,
     stack: reason.stack,
