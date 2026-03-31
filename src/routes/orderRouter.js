@@ -1,6 +1,7 @@
 const express = require("express");
 const metrics = require("../metrics");
 const config = require("../config.js");
+const logger = require("../logger.js");
 const { Role, DB } = require("../database/database.js");
 const { authRouter } = require("./authRouter.js");
 const { asyncHandler, StatusCodeError } = require("../endpointHelper.js");
@@ -123,6 +124,12 @@ orderRouter.post(
     );
 
     const order = await DB.addDinerOrder(req.user, orderReq);
+
+    const factoryBody = {
+      diner: { id: req.user.id, name: req.user.name, email: req.user.email },
+      order,
+    };
+
     const startTime = Date.now();
 
     const r = await fetch(`${config.factory.url}/api/order`, {
@@ -131,16 +138,20 @@ orderRouter.post(
         "Content-Type": "application/json",
         authorization: `Bearer ${config.factory.apiKey}`,
       },
-      body: JSON.stringify({
-        diner: { id: req.user.id, name: req.user.name, email: req.user.email },
-        order,
-      }),
+      body: JSON.stringify(factoryBody),
     });
 
     const latency = Date.now() - startTime;
     metrics.recordLatency("pizza_creation", latency);
 
     const j = await r.json();
+
+    logger.factoryLogger({
+      request: factoryBody,
+      response: j,
+      status: r.status,
+    });
+
     if (r.ok) {
       metrics.incrementPizzaMetrics(pizzaCount, orderRevenue, false);
       res.send({ order, followLinkToEndChaos: j.reportUrl, jwt: j.jwt });
