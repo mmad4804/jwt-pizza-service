@@ -61,7 +61,13 @@ jobs:
               endpointUrl: '${{ secrets.METRICS_ENDPOINT_URL }}',
               apiKey: '${{ secrets.METRICS_API_KEY }}',
               accountId: '${{ secrets.METRICS_ACCOUNT_ID_KEY }}',
-            },  
+            },
+            logging:    {
+              source: 'jwt-pizza-service',
+              userId: ${{ secrets.LOGGING_ACCOUNT_ID }},
+              url: '${{ secrets.LOGGING_ENDPOINT_URL }}',
+              apiKey: '${{ secrets.LOGGING_API_KEY }}',
+            },
           };" > src/config.js
           echo "Verifying endpointUrl length..."
           grep "endpointUrl" src/config.js | awk '{print length($0)}'
