@@ -44,7 +44,7 @@ function recordLatency(type, ms) {
 }
 
 // Periodically send the collected data to Grafana
-setInterval(() => {
+const metricsInterval = setInterval(() => {
   const metrics = [];
   const now = Date.now();
   const fifteenMinutesInMs = 15 * 60 * 1000;
@@ -115,6 +115,8 @@ setInterval(() => {
 
   if (metrics.length > 0) sendMetricToGrafana(metrics);
 }, 5000); // Send every 5 seconds (adjust as needed)
+
+metricsInterval.unref(); // Allow the process to exit if this is the only thing left running
 
 // Middleware to track requests
 function requestTracker(req, res, next) {

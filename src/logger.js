@@ -3,6 +3,20 @@ const JwtPizzaLogger = require("jwt-pizza-logger");
 
 class Logger {
   constructor() {
+    if (!config.logging) {
+      console.warn(
+        "Logging config is missing; logger initialized in idle mode.",
+      );
+      this.factory = {
+        httpLogger: (req, res, next) => next(),
+        log: () => {},
+        dbLogger: () => {},
+        factoryLogger: () => {},
+        unhandledErrorLogger: () => {},
+      };
+      return;
+    }
+
     this.factory = new JwtPizzaLogger(config);
   }
 

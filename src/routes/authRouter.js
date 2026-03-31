@@ -91,7 +91,7 @@ authRouter.post(
     });
     const auth = await setAuth(user);
     incrementAuthAttempt("success");
-    res.json({ user: user, token: auth });
+    res.json({ user: user, jwt: auth });
   }),
 );
 
@@ -105,7 +105,7 @@ authRouter.put(
       const auth = await setAuth(user);
 
       incrementAuthAttempt("success");
-      res.json({ user: user, token: auth });
+      res.json({ user: user, jwt: auth });
     } catch (error) {
       incrementAuthAttempt("failure");
       throw error;
