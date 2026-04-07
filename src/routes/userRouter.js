@@ -101,8 +101,8 @@ userRouter.put(
     }
 
     const updatedUser = await DB.updateUser(userId, name, email, password);
-    const jwt = await setAuth(updatedUser);
-    res.json({ user: updatedUser, jwt: jwt });
+    const token = await setAuth(updatedUser);
+    res.json({ user: updatedUser, token: token });
   }),
 );
 
