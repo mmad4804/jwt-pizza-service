@@ -21,8 +21,32 @@ class Logger {
   }
 
   httpLogger = (req, res, next) => {
-    this.factory.httpLogger(req, res, next);
+    let send = res.send;
+    res.send = (resBody) => {
+      const sanitizedBody = this.sanitize(resBody);
+
+      const logData = {
+        authorized: !!req.headers.authorization,
+        path: req.path,
+        method: req.method,
+        statusCode: res.statusCode,
+        reqBody: JSON.stringify(req.body),
+        resBody: sanitizedBody,
+      };
+
+      this.log(this.statusToLogLevel(res.statusCode), "http", logData);
+
+      res.send = send;
+      return res.send(resBody);
+    };
+    next();
   };
+
+  statusToLogLevel(statusCode) {
+    if (statusCode >= 500) return "error";
+    if (statusCode >= 400) return "warn";
+    return "info";
+  }
 
   dbLogger(query) {
     this.factory.dbLogger(query);
