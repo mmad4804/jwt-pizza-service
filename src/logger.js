@@ -36,8 +36,17 @@ class Logger {
     this.factory.unhandledErrorLogger(err);
   }
 
+  sanitize(logData) {
+    let logString = JSON.stringify(logData);
+    return logString
+      .replace(/\\"password\\":\s*\\"[^"]*\\"/g, '\\"password\\":\\"*****\\"')
+      .replace(/\\"token\\":\s*\\"[^"]*\\"/g, '\\"token\\":\\"*****\\"')
+      .replace(/\\"jwt\\":\s*\\"[^"]*\\"/g, '\\"jwt\\":\\"*****\\"');
+  }
+
   log(level, type, logData) {
-    this.factory.log(level, type, logData);
+    const sanitizedData = this.sanitize(logData);
+    this.factory.log(level, type, sanitizedData);
   }
 }
 module.exports = new Logger();
