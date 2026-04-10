@@ -116,12 +116,24 @@ orderRouter.post(
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
     const orderReq = req.body;
+    const menu = await DB.getMenu();
 
-    const pizzaCount = orderReq.items.length;
-    const orderRevenue = orderReq.items.reduce(
+    const validatedItems = orderReq.items.map((item) => {
+      const menuItem = menu.find((m) => m.id === item.menuId);
+      if (!menuItem) throw new StatusCodeError("Invalid menu item", 400);
+      return {
+        ...item,
+        price: menuItem.price, // Overwrite with official price
+      };
+    });
+
+    const pizzaCount = validatedItems.length;
+    const orderRevenue = validatedItems.reduce(
       (sum, item) => sum + item.price,
       0,
     );
+
+    orderReq.items = validatedItems;
 
     const order = await DB.addDinerOrder(req.user, orderReq);
 
